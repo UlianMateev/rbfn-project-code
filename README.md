@@ -19,12 +19,12 @@ To make the model scalable and easy to deploy, I designed the following cloud pi
 ## Model Overview
 The RBF network was chosen for its efficiency in approximating non-linear functions. Unlike standard MLP, the RBF layer uses radial distance to centers to transform the input space.
 
-![RBFN Schematic](nn_schema.png)
+![RBFN Schematic](images/nn_schema.png)
 
 ## Performance Results
 The model was tested against historical power grid data. Below is a comparison between the actual load and the model's predictions, showing that the "from scratch" implementation achieves high accuracy.
 
-![Model Performance](results.png)
+![Model Performance](images/results.png)
 
 ## Tech Stack
 * **Language:** Python (NumPy for math)
