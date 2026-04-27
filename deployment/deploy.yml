@@ -1,0 +1,54 @@
+name: Deploy RBF Model to AWS Lambda
+
+# This workflow triggers automatically whenever you push to the 'main' branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Download your code onto the GitHub server
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # 2. Log in to your AWS account securely
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    # 3. Log in to your Amazon ECR (Elastic Container Registry)
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    # 4. Build the Docker image, tag it with a unique ID, and push it to AWS ECR
+    - name: Build, Tag, and Push Docker Image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+        IMAGE_TAG: ${{ github.sha }}
+        LATEST_TAG: latest
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$LATEST_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$LATEST_TAG
+
+     #5. Tell AWS Lambda to grab the newly uploaded image and start usingg
+    - name: Update AWS Lambda Function Code
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+        IMAGE_TAG: ${{ github.sha }}
+        LAMBDA_FUNCTION: ${{ secrets.LAMBDA_FUNCTION_NAME }}
+      run: |
+        aws lambda update-function-code \
+          --function-name $LAMBDA_FUNCTION \
+          --image-uri $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
