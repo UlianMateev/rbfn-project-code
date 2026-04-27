@@ -10,7 +10,7 @@ This project focuses on predicting energy grid loads using a **Radial Basis Func
 ## Architecture & Cloud Flow
 To make the model scalable and easy to deploy, I designed the following cloud pipeline:
 
-![Cloud Architecture](architecture.png)
+![Cloud Architecture](images/architecture.png)
 
 * **CI/CD:** GitHub Actions
 * **Registry:** Amazon ECR
